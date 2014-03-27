@@ -237,9 +237,6 @@ config CPU_FREQ_GOV_SMARTASSH3
 	help
 	  'smartassH3' - smartassH3 governor.
 
-config CPU_FREQ_GOV_PEGASUSQ
-	tristate "'pegasusq' cpufreq policy governor"
-
 config CPU_FREQ_GOV_SAVAGEDZEN
 	tristate "'savagedzen' cpufreq policy governor"
 	help
