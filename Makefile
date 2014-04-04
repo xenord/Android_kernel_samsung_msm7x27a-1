@@ -246,8 +246,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
-HOSTCXXFLAGS = -O3
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
+HOSTCXXFLAGS = -O2
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -353,13 +353,13 @@ CHECK		= sparse
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 
-OPTIMISEFLAGS   = -O3 -march=armv7-a -mtune=cortex-a5 -mfpu=neon		  
+OFLAGS   		= -O2 -march=armv7-a -mtune=cortex-a5 -mfpu=neon  
 		  
-CFLAGS_MODULE   =$(OPTIMISEFLAGS)
-AFLAGS_MODULE   =$(OPTIMISEFLAGS)
+CFLAGS_MODULE   = $(OFLAGS)
+AFLAGS_MODULE   = $(OFLAGS)
 LDFLAGS_MODULE  =
-CFLAGS_KERNEL   = $(OPTIMISEFLAGS)
-AFLAGS_KERNEL   = $(OPTIMISEFLAGS)
+CFLAGS_KERNEL   = $(OFLAGS)
+AFLAGS_KERNEL   = $(OFLAGS)
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
 
@@ -569,7 +569,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
-KBUILD_CFLAGS	+= -O3
+KBUILD_CFLAGS	+= -O2
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
