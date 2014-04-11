@@ -42,7 +42,7 @@
 #include <mach/socinfo.h>
 #include <mach/vreg.h>
 #include <mach/rpc_pmapp.h>
-#include <mach/msm_battery_jena.h>
+#include <mach/msm_battery.h>
 #include <mach/rpc_server_handset.h>
 #include <mach/socinfo.h>
 #include "board-msm7x27a-regulator.h"
