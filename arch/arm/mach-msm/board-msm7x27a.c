@@ -42,7 +42,7 @@
 #include <linux/power_supply.h>
 #include <linux/regulator/consumer.h>
 #include <mach/rpc_pmapp.h>
-#include <mach/msm_battery_jena.h>
+#include <mach/msm_battery.h>
 #include <linux/smsc911x.h>
 #include <linux/atmel_maxtouch.h>
 #include <linux/ion.h>
