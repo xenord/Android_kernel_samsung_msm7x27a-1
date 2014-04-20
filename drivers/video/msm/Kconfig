@@ -261,11 +261,6 @@ config FB_MSM_LCDC_TREBON_HVGA
 	select FB_MSM_LCDC_PANEL
 	default n
 
-config FB_MSM_LCDC_JENA_HVGA
-	bool
-	select FB_MSM_LCDC_PANEL
-	default n
-
 config FB_MSM_LCDC_GEIM_HVGA
 	bool
 	select FB_MSM_LCDC_PANEL
@@ -435,16 +430,6 @@ config FB_MSM_LCDC_TREBON_HVGA_PANEL
 	default n
 	---help---
 	  Support for LCDC TREBON HVGA (320x480) panel
-	  .
-	  .
-
-config FB_MSM_LCDC_JENA_HVGA_PANEL
-	depends on FB_MSM_LCDC_HW
-	bool "FB MSM LCDC JENA HVGA Panel"
-	select FB_MSM_LCDC_JENA_HVGA
-	default n
-	---help---
-	  Support for LCDC JENA HVGA (320x480) panel
 	  .
 	  .
 

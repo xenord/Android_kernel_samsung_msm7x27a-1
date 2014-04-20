@@ -727,11 +727,6 @@ config MACH_GEIM_HWREV
 		help
           Qualcomm GEIM H/W revision.
 
-config MACH_JENA_HWREV
-        hex "MSM7x27A JENA HWREV"
-		depends on MACH_JENA
-		default "0x0"
-
 config BQ27425_FUEL_GAUGE
 	bool "CONFIG_BQ27425_FUEL_GAUGE"
 	default n
@@ -2059,31 +2054,6 @@ config MACH_TREBON
         bool "MSM7x27A TREBON"
         help
           Support for the Qualcomm TREBON 
-
-config MACH_JENA
-        bool "JENA platform"
-		depends on ARCH_MSM7X27A
-        default n
-
-config MACH_JENA_NON_NFC
-        bool "JENA NON NFC platform"
-		depends on MACH_JENA
-        default n
-
-config MACH_JENA_TELSTRA
-        bool "JENA TELSTRA platform"
-		depends on MACH_JENA
-        default n
-
-config MACH_JENA_AUSVHA
-        bool "JENA AUS_VHA platform"
-		depends on MACH_JENA
-        default n        
-
-config JENA_UART_TEST
-        bool "JENA uart test"
-		depends on ARCH_MSM7X27A
-        default n
 
 config MSM_MULTIMEDIA_USE_ION
 	bool "Multimedia suport using Ion"

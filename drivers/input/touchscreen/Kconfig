@@ -439,12 +439,6 @@ config TOUCHSCREEN_ZINITIX_GEIM
 	help
 		This enable support for Zinitix over I2C based touchscreen.		
 
-config TOUCHSCREEN_MELFAS
-	tristate "Melfas i2c touchscreen"
-	depends on I2C
-	help
-		This enable support for Melfas over I2C based touchscreen.
-
 config TOUCHSCREEN_TOUCHRIGHT
 	tristate "Touchright serial touchscreen"
 	select SERIO
