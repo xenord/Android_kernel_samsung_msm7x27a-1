@@ -927,6 +927,11 @@ config CC_OPTIMIZE_FOR_SIZE
 	  resulting in a smaller kernel.
 
 	  If unsure, say Y.
+	  
+config LINARO
+         bool "Use Linaro optimizations"
+         help
+           Enabling this option will use Linaro optimizations.	  
 
 config SYSCTL
 	bool
