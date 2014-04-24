@@ -33,10 +33,12 @@
 #include <linux/tick.h>
 #include <linux/timer.h>
 #include <linux/workqueue.h>
+#include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <asm/cputime.h>
 #include <linux/earlysuspend.h>
 
+#define cputime64_sub(__a, __b) ((__a) - (__b))
 
 /******************** Tunable parameters: ********************/
 
@@ -45,7 +47,7 @@
  * towards the ideal frequency and slower after it has passed it. Similarly,
  * lowering the frequency towards the ideal frequency is faster than below it.
  */
-#define DEFAULT_AWAKE_IDEAL_FREQ 768000
+#define DEFAULT_AWAKE_IDEAL_FREQ 600000
 static unsigned int awake_ideal_freq;
 
 /*
@@ -54,7 +56,7 @@ static unsigned int awake_ideal_freq;
  * that practically when sleep_ideal_freq==0 the awake_ideal_freq is used
  * also when suspended).
  */
-#define DEFAULT_SLEEP_IDEAL_FREQ 134400
+#define DEFAULT_SLEEP_IDEAL_FREQ 122880
 static unsigned int sleep_ideal_freq;
 
 /*
@@ -103,7 +105,7 @@ static unsigned long down_rate_us;
  * The frequency to set when waking up from sleep.
  * When sleep_ideal_freq=0 this will have no effect.
  */
-#define DEFAULT_SLEEP_WAKEUP_FREQ 768000
+#define DEFAULT_SLEEP_WAKEUP_FREQ 600000
 static unsigned int sleep_wakeup_freq;
 
 /*
@@ -947,7 +949,7 @@ static int __init cpufreq_smartass_init(void)
 
 	// Scale up is high priority
 	up_wq = alloc_workqueue("ksmartass_up", WQ_HIGHPRI, 1);
-    down_wq = alloc_workqueue("ksmartass_down", 0, 1);
+	down_wq = alloc_workqueue("ksmartass_down", 0, 1);
 	if (!up_wq || !down_wq)
 		return -ENOMEM;
 
