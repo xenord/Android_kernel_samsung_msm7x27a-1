@@ -112,7 +112,8 @@ Version 3.0.16 : [201101024]
 #include <linux/delay.h>
 #include <mach/gpio.h>
 #include <linux/uaccess.h>
-
+#include <mach/vreg.h>
+#include <linux/input/mt.h>
 #include <mach/pmic.h>
 
 #include "zinitix_touch_trebon.h"
@@ -122,7 +123,13 @@ Version 3.0.16 : [201101024]
 #endif
 
 #if	BT4x3_Above_Series
-#include "zinitix_touch_bt4x3_firmware_R021.h"
+
+#ifdef CONFIG_MACH_TREBON
+#include "zinitix_touch_bt4x3_firmware_R023.h"
+#else
+#include "zinitix_touch_bt4x3_firmware_R023.h"
+#endif
+
 #include "zinitix_touch_bt4x3_reg_data.h"
 #endif
 
@@ -287,8 +294,11 @@ static struct i2c_client *m_isp_client;
 #endif
 
 /*<= you must set key button mapping*/
+#ifdef CONFIG_MACH_TREBON
 u32 BUTTON_MAPPING_KEY[MAX_SUPPORTED_BUTTON_NUM] = {KEY_MENU, KEY_BACK};
-
+#else
+u32 BUTTON_MAPPING_KEY[MAX_SUPPORTED_BUTTON_NUM] = {KEY_MENU, KEY_BACK};
+#endif
 /* define i2c sub functions*/
 static struct zinitix_touch_dev *g_touch_dev;
 
@@ -1356,7 +1366,7 @@ static bool ts_init_touch(struct zinitix_touch_dev *touch_dev)
 	u16 chip_reg_data_version;
 	u16 chip_eeprom_info;
 #if	TOUCH_ONESHOT_UPGRADE
-	s16 stmp;
+	//s16 stmp;
 #endif
 	int retry_cnt = 0;
 
@@ -1497,8 +1507,13 @@ force_upgrade:
 
 	if ((touch_dev->work_proceedure != TS_IN_RESUME)
 		&& (touch_dev->work_proceedure != TS_IN_EALRY_SUSPEND)) {
+		#ifdef CONFIG_MACH_TREBON
 		if ((ts_check_need_upgrade(chip_firmware_version,
-			chip_reg_data_version) == true) || (retry_cnt > 10)) {
+                      chip_reg_data_version) == true) || (retry_cnt > 10)) {
+		#else
+		if ((ts_check_need_upgrade(chip_firmware_version,
+                     chip_reg_data_version) == true) || (retry_cnt > 10)) {	
+		#endif
 			printk(KERN_INFO "start upgrade firmware\n");
 
 			ts_upgrade_firmware(touch_dev, &m_firmware_data[2],
@@ -1522,7 +1537,11 @@ force_upgrade:
 			printk(KERN_INFO "zinitix touch chip "
 				"renewed firmware version = %x\r\n",
 				chip_firmware_version);
+		#ifdef CONFIG_MACH_TREBON
 		}
+		#else
+		}
+		#endif
 	}
 #endif
 
@@ -1577,6 +1596,13 @@ force_upgrade:
 
 #if	USE_HW_CALIBRATION
 	if (zinitix_bit_test(chip_eeprom_info, 0)) { /* hw calibration bit*/
+		if (touch_dev->cap_info.chip_int_mask != 0)
+			if (ts_write_reg(touch_dev->client,
+				ZINITIX_INT_ENABLE_FLAG,
+				touch_dev->cap_info.chip_int_mask)
+				!= I2C_SUCCESS)
+				goto fail_init;
+
 		 /* h/w calibration */
 		if (ts_write_reg(touch_dev->client,
 			ZINITIX_TOUCH_MODE, 0x07) != I2C_SUCCESS)
@@ -1590,6 +1616,13 @@ force_upgrade:
 		usleep(1*1000);
 		ts_write_cmd(touch_dev->client,
 			ZINITIX_CLEAR_INT_STATUS_CMD);
+		msleep(100);
+		ts_write_cmd(touch_dev->client,
+			ZINITIX_CLEAR_INT_STATUS_CMD);
+		msleep(100);
+			ts_write_cmd(touch_dev->client,
+			ZINITIX_CLEAR_INT_STATUS_CMD);
+		msleep(100);
 		/* wait for h/w calibration*/
 		hw_cal_cnt = 0;
 		do {
@@ -1613,12 +1646,6 @@ force_upgrade:
 		if (ts_write_reg(touch_dev->client,
 			ZINITIX_TOUCH_MODE, TOUCH_MODE) != I2C_SUCCESS)
 			goto fail_init;
-		if (touch_dev->cap_info.chip_int_mask != 0)
-			if (ts_write_reg(touch_dev->client,
-				ZINITIX_INT_ENABLE_FLAG,
-				touch_dev->cap_info.chip_int_mask)
-				!= I2C_SUCCESS)
-				goto fail_init;
 
 		usleep(10*1000);
 		if (ts_write_cmd(touch_dev->client,
@@ -1894,6 +1921,11 @@ static void	zinitix_clear_report_data(struct zinitix_touch_dev *touch_dev)
 	for (i = 0; i < touch_dev->cap_info.multi_fingers; i++) {
 		sub_status = touch_dev->reported_touch_info.coord[i].sub_status;
 		if (zinitix_bit_test(sub_status, SUB_BIT_EXIST)) {
+			input_mt_slot(touch_dev->input_dev, i);
+			/*input_report_abs(touch_dev->input_dev,
+				ABS_MT_TRACKING_ID,i);		*/
+			input_mt_report_slot_state(touch_dev->input_dev,
+							MT_TOOL_FINGER, false);
 			input_report_abs(touch_dev->input_dev,
 				ABS_MT_TOUCH_MAJOR, 0);
 			input_report_abs(touch_dev->input_dev,
@@ -1904,7 +1936,6 @@ static void	zinitix_clear_report_data(struct zinitix_touch_dev *touch_dev)
 			input_report_abs(touch_dev->input_dev,
 				ABS_MT_POSITION_Y,
 				touch_dev->reported_touch_info.coord[i].y);
-			input_mt_sync(touch_dev->input_dev);
 			reported = 1;
 		}
 		touch_dev->reported_touch_info.coord[i].sub_status = 0;
@@ -2020,7 +2051,6 @@ static void zinitix_touch_work(struct work_struct *work)
 					ABS_MT_POSITION_X, x);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_POSITION_Y, y);
-				input_mt_sync(touch_dev->input_dev);
 			}
 			touch_dev->reported_touch_info.coord[i].sub_status = 0;
 		}
@@ -2034,17 +2064,22 @@ static void zinitix_touch_work(struct work_struct *work)
 			x = touch_dev->reported_touch_info.coord[i].x;
 			y = touch_dev->reported_touch_info.coord[i].y;
 			if (zinitix_bit_test(sub_status, SUB_BIT_EXIST)) {
+				input_mt_slot(touch_dev->input_dev, i);
 				/*input_report_abs(touch_dev->input_dev,
-					ABS_MT_TRACKING_ID,i);*/
+					ABS_MT_TRACKING_ID,i);		*/
+				input_mt_report_slot_state(touch_dev->input_dev,
+							MT_TOOL_FINGER, false);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_TOUCH_MAJOR, 0);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_WIDTH_MAJOR, 0);
 				input_report_abs(touch_dev->input_dev,
+					ABS_MT_PRESSURE, 0);
+				input_report_abs(touch_dev->input_dev,
 					ABS_MT_POSITION_X, x);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_POSITION_Y, y);
-				input_mt_sync(touch_dev->input_dev);
+			
 			}
 		}
 		memset(&touch_dev->reported_touch_info,
@@ -2063,17 +2098,19 @@ static void zinitix_touch_work(struct work_struct *work)
 			x = touch_dev->reported_touch_info.coord[i].x;
 			y = touch_dev->reported_touch_info.coord[i].y;
 			if (zinitix_bit_test(sub_status, SUB_BIT_EXIST)) {
+				input_mt_slot(touch_dev->input_dev, i);
 				/*input_report_abs(touch_dev->input_dev,
-					ABS_MT_TRACKING_ID,i);*/
-				input_report_abs(touch_dev->input_dev,
+					ABS_MT_TRACKING_ID,i);		*/
+				input_mt_report_slot_state(touch_dev->input_dev,
+							MT_TOOL_FINGER, false);
+				/*input_report_abs(touch_dev->input_dev,
 				ABS_MT_TOUCH_MAJOR, 0);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_WIDTH_MAJOR, 0);
 				input_report_abs(touch_dev->input_dev,
 					ABS_MT_POSITION_X, x);
 				input_report_abs(touch_dev->input_dev,
-					ABS_MT_POSITION_Y, y);
-				input_mt_sync(touch_dev->input_dev);
+					ABS_MT_POSITION_Y, y);*/
 			}
 		}
 		memset(&touch_dev->reported_touch_info,
@@ -2113,36 +2150,46 @@ static void zinitix_touch_work(struct work_struct *work)
 				i, x, y); */
 			if (touch_dev->touch_info.status == 0x902)
 				zinitix_debug_msg("P [%02d]\r\n", i);
-			/*input_report_abs(touch_dev->input_dev,
-				ABS_MT_TRACKING_ID,i); */
+				input_mt_slot(touch_dev->input_dev, i);
+				/*input_report_abs(touch_dev->input_dev,
+					ABS_MT_TRACKING_ID,i);		*/		
+				input_mt_report_slot_state(touch_dev->input_dev,
+							MT_TOOL_FINGER, true);
 			if (w == 0)
 				w = 5;
-			input_report_abs(touch_dev->input_dev,
+			/*input_report_abs(touch_dev->input_dev,
 				ABS_MT_TOUCH_MAJOR, (u32)w);
 			input_report_abs(touch_dev->input_dev,
-				ABS_MT_WIDTH_MAJOR, (u32)w);
+				ABS_MT_WIDTH_MAJOR, (u32)w);*/
+			input_report_abs(touch_dev->input_dev,
+				ABS_MT_PRESSURE, (u32)w);
 			input_report_abs(touch_dev->input_dev,
 				ABS_MT_POSITION_X, x);
 			input_report_abs(touch_dev->input_dev,
 				ABS_MT_POSITION_Y, y);
-			input_mt_sync(touch_dev->input_dev);
+			input_report_key(touch_dev->input_dev,
+				BTN_TOUCH, (u32)w);
 		} else if (zinitix_bit_test(sub_status, SUB_BIT_UP)) {
 			zinitix_debug_msg("finger [%02d] up \r\n", i);
 			x = touch_dev->reported_touch_info.coord[i].x;
 			y = touch_dev->reported_touch_info.coord[i].y;
 			memset(&touch_dev->touch_info.coord[i],
 				0x0, sizeof(struct _ts_zinitix_coord));
+				input_mt_slot(touch_dev->input_dev, i);
+				/*input_report_abs(touch_dev->input_dev,
+					ABS_MT_TRACKING_ID,i);		*/		
+				input_mt_report_slot_state(touch_dev->input_dev,
+							MT_TOOL_FINGER, false);
 			/*input_report_abs(touch_dev->input_dev,
-				ABS_MT_TRACKING_ID,i);*/
-			input_report_abs(touch_dev->input_dev,
 				ABS_MT_TOUCH_MAJOR, 0);
 			input_report_abs(touch_dev->input_dev,
 				ABS_MT_WIDTH_MAJOR, 0);
 			input_report_abs(touch_dev->input_dev,
+				ABS_MT_PRESSURE, (u32)w);
+			input_report_abs(touch_dev->input_dev,
 				ABS_MT_POSITION_X, x);
 			input_report_abs(touch_dev->input_dev,
-				ABS_MT_POSITION_Y, y);
-			input_mt_sync(touch_dev->input_dev);
+				ABS_MT_POSITION_Y, y);*/
 		} else {
 			memset(&touch_dev->touch_info.coord[i],
 				0x0, sizeof(struct _ts_zinitix_coord));
@@ -3656,8 +3703,11 @@ static int zinitix_touch_probe(struct i2c_client *client,
 	set_bit(EV_SYN, touch_dev->input_dev->evbit);
 	set_bit(EV_KEY, touch_dev->input_dev->evbit);
 	set_bit(BTN_TOUCH, touch_dev->input_dev->keybit);
+	set_bit(MT_TOOL_FINGER, touch_dev->input_dev->keybit);
+	set_bit(INPUT_PROP_DIRECT, touch_dev->input_dev->propbit);
 	set_bit(EV_ABS, touch_dev->input_dev->evbit);
 
+	input_mt_init_slots(touch_dev->input_dev, touch_dev->cap_info.multi_fingers);
 	for (i = 0; i < MAX_SUPPORTED_BUTTON_NUM; i++)
 		set_bit(BUTTON_MAPPING_KEY[i], touch_dev->input_dev->keybit);
 
@@ -3687,7 +3737,8 @@ static int zinitix_touch_probe(struct i2c_client *client,
 		0, 255, 0, 0);
 	input_set_abs_params(touch_dev->input_dev, ABS_MT_WIDTH_MAJOR,
 		0, 255, 0, 0);
-
+	input_set_abs_params(touch_dev->input_dev, ABS_MT_TRACKING_ID,
+		0, touch_dev->cap_info.multi_fingers-1, 0, 0);
 	zinitix_debug_msg("register %s input device \r\n",
 		touch_dev->input_dev->name);
 	ret = input_register_device(touch_dev->input_dev);
@@ -3950,6 +4001,7 @@ static int __devinit zinitix_touch_init(void)
 #if	TOUCH_USING_ISP_METHOD
 	m_isp_client = NULL;
 #endif
+
 	return i2c_add_driver(&zinitix_touch_driver);
 }
 

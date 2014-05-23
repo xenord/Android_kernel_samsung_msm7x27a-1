@@ -70,7 +70,8 @@ obj-$(CONFIG_TOUCHSCREEN_CY8C_TS)	+= cy8c_ts.o
 obj-$(CONFIG_TOUCHSCREEN_CYTTSP_I2C)       += cyttsp-i2c.o
 obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)	+= synaptics_i2c_rmi4_jena.o
 #obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)   += ISSP/
-obj-$(CONFIG_TOUCHSCREEN_ZINITIX)   += zinitix_touch.o
-obj-$(CONFIG_TOUCHSCREEN_ZINITIX_TREBON)   += zinitix_touch_trebon.o
+obj-$(CONFIG_TOUCHSCREEN_ZINITIX) += zinitix_touch.o
+obj-$(CONFIG_TOUCHSCREEN_ZINITIX_TREBON) += zinitix_touch_trebon.o
+obj-$(CONFIG_TOUCHSCREEN_ZINITIX_AMAZING)   += zinitix_touch_amazing.o
 obj-$(CONFIG_TOUCHSCREEN_ZINITIX_GEIM)   += zinitix_touch_geim.o
 

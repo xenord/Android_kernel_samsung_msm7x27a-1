@@ -43,8 +43,11 @@ interrupt mask / button num / finger num */
 
 /* max 8 */
 #define	MAX_SUPPORTED_BUTTON_NUM	8
+#ifdef CONFIG_MACH_TREBON
+#define SUPPORTED_BUTTON_NUM            2
+#else
 #define	SUPPORTED_BUTTON_NUM		2
-
+#endif
 /* Upgrade Method*/
 #define	TOUCH_ONESHOT_UPGRADE		1
 #define	TOUCH_FORCE_UPGRADE		0

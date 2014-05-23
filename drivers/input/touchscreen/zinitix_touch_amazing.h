@@ -26,10 +26,10 @@
 #define	BT4x3_Above_Series		0
 #endif
 
-#define	TS_DRVIER_VERSION		"3.0.16"
+#define	TS_DRVIER_VERSION		"3.0.20"
 
 /* select touch mode : 0 is recommended*/
-#define	TOUCH_MODE				0
+#define	TOUCH_MODE			0
 
 /* if you want to use firmware setting, set this value.
 interrupt mask / button num / finger num */
@@ -43,11 +43,12 @@ interrupt mask / button num / finger num */
 
 /* max 8 */
 #define	MAX_SUPPORTED_BUTTON_NUM	8
-#define	SUPPORTED_BUTTON_NUM		4
+#define SUPPORTED_BUTTON_NUM            3
 
 /* Upgrade Method*/
 #define	TOUCH_ONESHOT_UPGRADE		1
-#define	TOUCH_FORCE_UPGRADE			1
+#define	TOUCH_FORCE_UPGRADE		0
+#define	USE_CHECKSUM			0	// BT4x3 only
 /* if you use isp mode, you must add i2c device :
 name = "zinitix_isp" , addr 0x50*/
 #define	TOUCH_USING_ISP_METHOD		1
@@ -59,6 +60,11 @@ name = "zinitix_isp" , addr 0x50*/
 
 /* resolution offset */
 #define	ABS_PT_OFFSET			1
+
+/* Tx, Rx channel number */
+#define TX_CHAN_NUM	15
+#define RX_CHAN_NUM	10
+#define NODE_NUM		150 /*15 x 10 */
 
 #if BT4x2_Series
 #define	CHIP_POWER_OFF_DELAY		500	/*ms*/
@@ -153,7 +159,7 @@ struct _reg_ioctl {
 #endif
 
 /*  Other Things */
-#define	ZINITIX_INIT_RETRY_CNT			10
+#define	ZINITIX_INIT_RETRY_CNT			5
 #define	I2C_SUCCESS				0
 #define	I2C_FAIL				1
 
@@ -229,7 +235,7 @@ struct _reg_ioctl {
 #define	ZINITIX_CLEAR_INT_STATUS_CMD		0x0003
 #define	ZINITIX_CALIBRATE_CMD			0x0006
 #define	ZINITIX_SAVE_STATUS_CMD			0x0007
-#define	ZINITIX_SAVE_CALIBRATION_CMD		0x08
+#define	ZINITIX_SAVE_CALIBRATION_CMD		0x0008   // 3.0.20
 #define	ZINITIX_RECALL_FACTORY_CMD		0x000f
 
 
@@ -246,7 +252,7 @@ struct _reg_ioctl {
 #define ZINITIX_TOTAL_NUMBER_OF_X		0x0060
 #define ZINITIX_TOTAL_NUMBER_OF_Y		0x0061
 
-#define	ZINITIX_BUTTON_SUPPORTED_NUM		0xB0
+#define	ZINITIX_BUTTON_SUPPORTED_NUM		0x00B0  // 3.0.20
 
 
 #define	ZINITIX_X_RESOLUTION			0x00C0
@@ -263,6 +269,10 @@ struct _reg_ioctl {
 #define	ZINITIX_INT_ENABLE_FLAG			0x00f0
 #define	ZINITIX_PERIODICAL_INTERRUPT_INTERVAL	0x00f1
 
+#define	ZINITIX_CHECK_REG0	0x00AC // 3.0.20
+#define	ZINITIX_CHECK_REG1	0x00AD
+#define	ZINITIX_CHECK_REG2	0x00AE
+#define	ZINITIX_CHECK_REG3	0x00AF
 
 #endif
 /* Interrupt & status register flag bit
@@ -320,4 +330,5 @@ struct _reg_ioctl {
 #define zinitix_swap_16(s) (((((s) & 0xff) << 8) | (((s) >> 8) & 0xff)))
 
 #endif /*ZINITIX_HEADER*/
+
 
