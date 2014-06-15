@@ -1399,7 +1399,14 @@ config MSM7X27A_OVERCLOCK
 config MSM_CPU_FREQ_MIN
 	int "Min CPU Frequency"
 	depends on MSM_CPU_FREQ_SET_MIN_MAX
-	default 245760
+	default 122880
+	
+config MSM7X27A_UNDERVOLT
+   	   bool "Enable stock freq undervolt for MSM7x27A"
+        depends on MSM_CPU_FREQ_SET_MIN_MAX
+       default n
+   	   help
+    	Enable Undervolting of the default max freq	
 
 endif # CPU_FREQ_MSM
 
