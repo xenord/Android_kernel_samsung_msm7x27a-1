@@ -260,6 +260,7 @@ config CPU_FREQ_GOV_HYPER
 config CPU_FREQ_VDD_LEVELS
        bool "CPU Vdd levels sysfs interface" 
        depends on CPU_FREQ_STAT
+       depends on MACH_MSM7X27A || MACH_MSM7X27A 
        default n
        help
          CPU Vdd levels sysfs interface  
