@@ -639,42 +639,50 @@ static ssize_t store_vdd_levels(struct cpufreq_policy *policy, const char *buf, 
 	if (count < 1)
 		return 0;
 
-	if (buf[0] == '-') {
+	if (buf[0] == '-')
+	{
 		sign = -1;
 		i++;
 	}
-	else if (buf[0] == '+') {
+	else if (buf[0] == '+')
+	{
 		sign = 1;
 		i++;
 	}
 
-	for (j = 0; i < count; i++) {
+	for (j = 0; i < count; i++)
+	{
 		char c = buf[i];
-		if ((c >= '0') && (c <= '9')) {
+		if ((c >= '0') && (c <= '9'))
+		{
 			pair[j] *= 10;
 			pair[j] += (c - '0');
 		}
-		else if ((c == ' ') || (c == '\t'))	{
-			if (pair[j] != 0) {
+		else if ((c == ' ') || (c == '\t'))
+		{
+			if (pair[j] != 0)
+			{
 				j++;
 				if ((sign != 0) || (j > 1))
-				break;
+					break;
 			}
 		}
 		else
 			break;
 	}
 
-	if (sign != 0) {
-		if (pair[0] > 0)
-		acpuclk_set_vdd(0, sign * pair[0]);
+	if (sign != 0)
+	{
+		return -EINVAL;
 	}
-	else {
-		if ((pair[0] > 0) && (pair[1] > 0))
+	else
+	{
+		if ((pair[0] > 0) && (pair[1] >= 0) && (pair[1] <= 10))
 			acpuclk_set_vdd((unsigned)pair[0], pair[1]);
 		else
 			return -EINVAL;
 	}
+
 	return count;
 }
 
