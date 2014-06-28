@@ -1311,7 +1311,7 @@ int get_img(struct mdp_img *img, struct mdp_blit_req *req,
 		}
 	}
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-		*srcp_ihdl = ion_import_fd(mfd->iclient, img->memory_id);
+		*srcp_ihdl = ion_import_dma_buf(mfd->iclient, img->memory_id);
 		if (IS_ERR_OR_NULL(*srcp_ihdl))
 			return PTR_ERR(*srcp_ihdl);
 
@@ -1400,6 +1400,9 @@ static int mdp_ppp_blit_addr(struct fb_info *info, struct mdp_blit_req *req,
 			req->src.width * req->src.height);
 
 	iBuf.mdpImg.mdpOp = MDPOP_NOP;
+
+	if (req->flags & MDP_IS_FG)
+		iBuf.mdpImg.mdpOp |= MDPOP_LAYER_IS_FG;
 
 	/* blending check */
 	if (req->transp_mask != MDP_TRANSP_NOP) {

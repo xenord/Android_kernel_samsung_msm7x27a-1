@@ -34,7 +34,7 @@
 #include <mach/msm_rpcrouter.h>
 #include <mach/msm_battery.h>
 #include <mach/bq27425_fuelguage.h>
-#include "../../arch/arm/mach-msm/proc_comm.h"
+#include <mach/proc_comm.h>
 #include <mach/pmic.h>
 #include <linux/android_alarm.h>
 /*from S+*/
@@ -50,10 +50,6 @@ static struct wake_lock vbus_wake_lock;
 static struct wake_lock lpm_wake_lock;
 static struct wake_lock fuel_alert_wake_lock;
 static int fuel_alert_det;
-
-#if defined CONFIG_BLX
-#include <linux/blx.h>
-#endif
 
 #ifdef DEBUG
 #undef pr_debug
@@ -287,7 +283,7 @@ const int temp_table[][2] = {
 
 #ifdef CONFIG_MACH_GEIM
 #define BATT_FULL_CHARGING_CURRENT	90
-#define BATT_FULL_CHARGING_VOLTAGE  4180
+#define BATT_FULL_CHARGING_VOLTAGE      4180
 #else
 #define BATT_FULL_CHARGING_CURRENT	90
 #define BATT_FULL_CHARGING_VOLTAGE      4180
@@ -1472,13 +1468,13 @@ static int msm_batt_power_get_property(struct power_supply *psy,
 		val->intval = msm_batt_info.batt_technology;
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_MAX_DESIGN:
-		val->intval = msm_batt_info.voltage_max_design*1000;
+		val->intval = msm_batt_info.voltage_max_design;
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_MIN_DESIGN:
-		val->intval = msm_batt_info.voltage_min_design*1000;
+		val->intval = msm_batt_info.voltage_min_design;
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		val->intval = msm_batt_info.battery_voltage*1000;
+		val->intval = msm_batt_info.batt_voltage_now;
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY:
 		val->intval = msm_batt_info.batt_capacity;

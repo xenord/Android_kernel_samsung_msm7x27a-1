@@ -25,8 +25,9 @@
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 #include <media/msm_camera.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <mach/pmic.h>
+#include <linux/module.h>
 
 #include "sr300pc20r1_mipi_0826.h"
 #include <mach/camera.h>

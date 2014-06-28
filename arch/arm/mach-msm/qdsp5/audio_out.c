@@ -4,7 +4,7 @@
  *
  * Copyright (C) 2008 Google, Inc.
  * Copyright (C) 2008 HTC Corporation
- * Copyright (c) 2012 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -28,17 +28,21 @@
 #include <linux/debugfs.h>
 #include <linux/delay.h>
 #include <linux/wakelock.h>
+#include <linux/pm_qos.h>
 
 #include <linux/msm_audio.h>
 
 #include <asm/atomic.h>
 #include <asm/ioctls.h>
 #include <mach/msm_adsp.h>
+#include <mach/cpuidle.h>
 
 #include "audmgr.h"
 
+#include <mach/qdsp5/audio_acdb_def.h>
 #include <mach/qdsp5/qdsp5audppcmdi.h>
 #include <mach/qdsp5/qdsp5audppmsg.h>
+#include <mach/qdsp5/qdsp5audpp.h>
 
 #include <mach/htc_pwrsink.h>
 #include <mach/debug_mm.h>
@@ -61,6 +65,7 @@
 #define SRS_MASK_HP 8
 #define SRS_MASK_P 16
 #define SRS_MASK_HL 32
+
 
 enum {
 	EV_NULL,
@@ -154,7 +159,7 @@ struct audio {
 	int stopped; /* set when stopped, cleared on flush */
 
 	struct wake_lock wakelock;
-	struct wake_lock idlelock;
+	struct pm_qos_request pm_qos_req;
 
 	audpp_cmd_cfg_object_params_volume vol_pan;
 };
@@ -179,11 +184,13 @@ struct audio_copp {
 
 	int qconcert_plus_enable;
 	int qconcert_plus_needs_commit;
-	
+
 	int srs_enable;
 	int srs_needs_commit;
 	int srs_feature_mask;
 	audpp_cmd_cfg_object_params_qconcert qconcert_plus;
+	int srs_current_feature_mask;
+	uint32_t audpp_disabled_features;
 
 	int status;
 	int opened;
@@ -203,13 +210,14 @@ static void audio_prevent_sleep(struct audio *audio)
 {
 	MM_DBG("\n"); /* Macro prints the file name and function */
 	wake_lock(&audio->wakelock);
-	wake_lock(&audio->idlelock);
+	pm_qos_update_request(&audio->pm_qos_req,
+			      msm_cpuidle_get_deep_idle_latency());
 }
 
 static void audio_allow_sleep(struct audio *audio)
 {
+	pm_qos_update_request(&audio->pm_qos_req, PM_QOS_DEFAULT_VALUE);
 	wake_unlock(&audio->wakelock);
-	wake_unlock(&audio->idlelock);
 	MM_DBG("\n"); /* Macro prints the file name and function */
 }
 
@@ -217,7 +225,6 @@ static int audio_dsp_out_enable(struct audio *audio, int yes);
 static int audio_dsp_send_buffer(struct audio *audio, unsigned id, unsigned len);
 
 static void audio_dsp_event(void *private, unsigned id, uint16_t *msg);
-
 static int audio_enable_srs_trumedia(struct audio_copp *audio_copp, int enable);
 /* must be called with audio->lock held */
 static int audio_enable(struct audio *audio)
@@ -275,6 +282,7 @@ static int audio_disable(struct audio *audio)
 
 		audpp_disable(-1, audio);
 
+		audio->stopped = 1;
 		wake_up(&audio->wait);
 		audmgr_disable(&audio->audmgr);
 		audio->out_needed = 0;
@@ -287,25 +295,94 @@ void audio_commit_pending_pp_params(void *priv, unsigned id, uint16_t *msg)
 {
 	struct audio_copp *audio_copp = priv;
 
-	if (AUDPP_MSG_CFG_MSG == id && msg[0] == AUDPP_MSG_ENA_DIS)
+	if (audio_copp == NULL) {
+		MM_ERR("NULL audio copp pointer\n");
 		return;
+	}
+
+	if (AUDPP_MSG_CFG_MSG == id && msg[0] == AUDPP_MSG_ENA_DIS) {
+		audio_copp->audpp_disabled_features = 0;
+		return;
+	}
+	if (AUDPP_MSG_CFG_MSG == id && msg[0] == AUDPP_MSG_ENA_ENA)
+		audio_copp->audpp_disabled_features = 0;
 
 	if (!audio_copp->status)
 		return;
 
-	audpp_dsp_set_mbadrc(COMMON_OBJ_ID, audio_copp->mbadrc_enable,
+	if (id == AUDPP_MSG_PP_DISABLE_FEEDBACK) {
+		audio_copp->audpp_disabled_features |=
+			((uint32_t)(msg[AUDPP_DISABLE_FEATS_MSW] << 16) |
+			 msg[AUDPP_DISABLE_FEATS_LSW]);
+		MM_DBG("AUDPP disable feedback: %x",
+				audio_copp->audpp_disabled_features);
+		return;
+	} else if (id == AUDPP_MSG_PP_FEATS_RE_ENABLE) {
+		MM_DBG("AUDPP re-enable messaage: %x, acdb_enabled %d",
+			audio_copp->audpp_disabled_features, is_acdb_enabled());
+		if (!is_acdb_enabled()) {
+			if ((audio_copp->audpp_disabled_features &
+				(1 << AUDPP_CMD_MBADRC)) ==
+				(1 << AUDPP_CMD_MBADRC)) {
+				audpp_dsp_set_mbadrc(COMMON_OBJ_ID,
+						audio_copp->mbadrc_enable,
+						&audio_copp->mbadrc);
+			}
+			if ((audio_copp->audpp_disabled_features &
+				(1 << AUDPP_CMD_EQUALIZER)) ==
+				(1 << AUDPP_CMD_EQUALIZER)) {
+				audpp_dsp_set_eq(COMMON_OBJ_ID,
+						audio_copp->eq_enable,
+						&audio_copp->eq);
+			}
+			if ((audio_copp->audpp_disabled_features &
+				(1 << AUDPP_CMD_IIR_TUNING_FILTER)) ==
+				(1 << AUDPP_CMD_IIR_TUNING_FILTER)) {
+				audpp_dsp_set_rx_iir(COMMON_OBJ_ID,
+						audio_copp->rx_iir_enable,
+						&audio_copp->iir);
+			}
+			if ((audio_copp->audpp_disabled_features &
+				(1 << AUDPP_CMD_QCONCERT)) ==
+					(1 << AUDPP_CMD_QCONCERT)) {
+				audpp_dsp_set_qconcert_plus(COMMON_OBJ_ID,
+					audio_copp->qconcert_plus_enable,
+					&audio_copp->qconcert_plus);
+			}
+		}
+		if ((audio_copp->audpp_disabled_features & (1 << AUDPP_CMD_SRS))
+			== (1 << AUDPP_CMD_SRS)) {
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_W)
+				audpp_dsp_set_rx_srs_trumedia_w(&audio_copp->w);
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_C)
+				audpp_dsp_set_rx_srs_trumedia_c(&audio_copp->c);
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_HP)
+				audpp_dsp_set_rx_srs_trumedia_h(&audio_copp->h);
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_P)
+				audpp_dsp_set_rx_srs_trumedia_p(&audio_copp->p);
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_HL)
+				audpp_dsp_set_rx_srs_trumedia_l(&audio_copp->l);
+			if (audio_copp->srs_current_feature_mask & SRS_MASK_G)
+				audpp_dsp_set_rx_srs_trumedia_g(&audio_copp->g);
+		}
+		audio_copp->audpp_disabled_features = 0;
+		return;
+	}
+
+	if (!is_acdb_enabled()) {
+		audpp_dsp_set_mbadrc(COMMON_OBJ_ID, audio_copp->mbadrc_enable,
 						&audio_copp->mbadrc);
 
-	audpp_dsp_set_eq(COMMON_OBJ_ID, audio_copp->eq_enable,
+		audpp_dsp_set_eq(COMMON_OBJ_ID, audio_copp->eq_enable,
 						&audio_copp->eq);
-
-	audpp_dsp_set_rx_iir(COMMON_OBJ_ID, audio_copp->rx_iir_enable,
+		audpp_dsp_set_rx_iir(COMMON_OBJ_ID, audio_copp->rx_iir_enable,
 							&audio_copp->iir);
-	audpp_dsp_set_vol_pan(COMMON_OBJ_ID, &audio_copp->vol_pan);
+		audpp_dsp_set_vol_pan(COMMON_OBJ_ID, &audio_copp->vol_pan);
 
-	audpp_dsp_set_qconcert_plus(COMMON_OBJ_ID,
+		audpp_dsp_set_qconcert_plus(COMMON_OBJ_ID,
 				audio_copp->qconcert_plus_enable,
 				&audio_copp->qconcert_plus);
+	}
 	audio_enable_srs_trumedia(audio_copp, true);
 }
 EXPORT_SYMBOL(audio_commit_pending_pp_params);
@@ -501,6 +578,8 @@ static int audio_enable_srs_trumedia(struct audio_copp *audio_copp, int enable)
 		if (audio_copp->srs_feature_mask & SRS_MASK_G)
 			audpp_dsp_set_rx_srs_trumedia_g(&audio_copp->g);
 
+		audio_copp->srs_current_feature_mask =
+			audio_copp->srs_feature_mask;
 		audio_copp->srs_needs_commit = 0;
 		audio_copp->srs_feature_mask = 0;
 	}
@@ -579,7 +658,6 @@ static long audio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;
 	case AUDIO_STOP:
 		rc = audio_disable(audio);
-		audio->stopped = 1;
 		break;
 	case AUDIO_FLUSH:
 		if (audio->stopped) {
@@ -593,6 +671,7 @@ static long audio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			audio_flush(audio);
 			mutex_unlock(&audio->write_lock);
 		}
+		break;
 	case AUDIO_SET_CONFIG: {
 		struct msm_audio_config config;
 		if (copy_from_user(&config, (void*) arg, sizeof(config))) {
@@ -614,6 +693,7 @@ static long audio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	}
 	case AUDIO_GET_CONFIG: {
 		struct msm_audio_config config;
+		memset(&config, 0, sizeof(config));
 		config.buffer_size = BUFSZ;
 		config.buffer_count = 2;
 		config.sample_rate = audio->out_sample_rate;
@@ -640,7 +720,7 @@ static long audio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 }
 
 /* Only useful in tunnel-mode */
-static int audio_fsync(struct file *file,	int datasync)
+static int audio_fsync(struct file *file, loff_t a, loff_t b, int datasync)
 {
 	struct audio *audio = file->private_data;
 	int rc = 0;
@@ -1146,7 +1226,8 @@ static int __init audio_init(void)
 	spin_lock_init(&the_audio.dsp_lock);
 	init_waitqueue_head(&the_audio.wait);
 	wake_lock_init(&the_audio.wakelock, WAKE_LOCK_SUSPEND, "audio_pcm");
-	wake_lock_init(&the_audio.idlelock, WAKE_LOCK_IDLE, "audio_pcm_idle");
+	pm_qos_add_request(&the_audio.pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+				PM_QOS_DEFAULT_VALUE);
 	return (misc_register(&audio_misc) || misc_register(&audpp_misc));
 }
 

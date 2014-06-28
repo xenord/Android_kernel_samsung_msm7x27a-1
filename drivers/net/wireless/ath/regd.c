@@ -15,6 +15,9 @@
  */
 
 #include <linux/kernel.h>
+#if 0 // by bbelief
+#include <linux/export.h>
+#endif
 #include <net/cfg80211.h>
 #include <net/mac80211.h>
 #include "regd.h"
@@ -253,6 +256,10 @@ ath_reg_apply_active_scan_flags(struct wiphy *wiphy,
 	int r;
 
 	sband = wiphy->bands[IEEE80211_BAND_2GHZ];
+#if 0 // by bbelief	
+	if (!sband)
+		return;
+#endif	
 
 	/*
 	 * If no country IE has been received always enable active scan

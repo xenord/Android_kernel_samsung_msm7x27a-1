@@ -501,6 +501,7 @@ void mdp_dma2_update(struct msm_fb_data_type *mfd)
 		mfd->ibuf_flushed = TRUE;
 		mdp_dma2_update_lcd(mfd);
 
+		spin_lock_irqsave(&mdp_spin_lock, flag);
 		mdp_enable_irq(MDP_DMA2_TERM);
 		mfd->dma->busy = TRUE;
 		INIT_COMPLETION(mfd->dma->comp);
@@ -595,8 +596,9 @@ void mdp_set_dma_pan_info(struct fb_info *info, struct mdp_dirty_region *dirty,
 	down(&mfd->sem);
 
 	iBuf = &mfd->ibuf;
-	if (mfd->map_buffer)
-		iBuf->buf = (uint8 *)mfd->map_buffer->iova[0];
+
+	if (mfd->display_iova)
+		iBuf->buf = (uint8 *)mfd->display_iova;
 	else
 		iBuf->buf = (uint8 *) info->fix.smem_start;
 

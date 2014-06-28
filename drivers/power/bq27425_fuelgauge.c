@@ -61,7 +61,7 @@
 
 #define ERESET			1
 
-#ifdef CONFIG_MACH_GEIM
+#if defined(CONFIG_MACH_GEIM)
 #define FUEL_I2C_SCL 79
 #define FUEL_I2C_SDA 78
 #else
@@ -528,7 +528,7 @@ static int bq27425_set_fuelalert_code(void)
 
 	struct i2c_client *client = fg_i2c_client;
 
-	u8 data[4];
+	u8 data[5];
 	u8 offset[2];
 	u8 cntl_data[2];
 	u8 ret;

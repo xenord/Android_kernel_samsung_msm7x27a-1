@@ -33,6 +33,7 @@
 #include <linux/workqueue.h>
 #include <linux/uaccess.h>
 #include <linux/gp2a.h>
+#include <linux/module.h>
 #include "sensors_head.h"
 
 

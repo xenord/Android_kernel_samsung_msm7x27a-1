@@ -1,6 +1,6 @@
 /* arch/arm/mach-msm/rpc_server_handset.c
  *
- * Copyright (c) 2008-2010, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2008-2010,2012 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -212,6 +212,7 @@ static const uint32_t hs_key_map[] = {
 	KEY(HS_END_K, KEY_POWER),
 #if 0
 	KEY(HS_STEREO_HEADSET_K, SW_HEADPHONE_INSERT_W_MIC),
+	KEY(HS_HEADSET_HEADPHONE_K, SW_HEADPHONE_INSERT),
 	KEY(HS_HEADSET_MICROPHONE_K, SW_MICROPHONE_INSERT),
 	KEY(HS_HEADSET_HEADPHONE_K, SW_HEADPHONE_INSERT), 			/* 3pole headset */
 	KEY(HS_HEADSET_K, SW_HEADPHONE_INSERT_W_MIC), 				/* 4pole headset */	
@@ -635,7 +636,7 @@ static int hs_cb_func(struct msm_rpc_client *client, void *buffer, int in_size)
 	return 0;
 }
 
-static int __init hs_rpc_cb_init(void)
+static int __devinit hs_rpc_cb_init(void)
 {
 	int rc = 0, i, num_vers;
 
@@ -766,6 +767,7 @@ static int __devinit hs_probe(struct platform_device *pdev)
 	//input_set_capability(ipdev, EV_SW, SW_MICROPHONE_INSERT);
 	input_set_capability(ipdev, EV_KEY, KEY_POWER);
 	input_set_capability(ipdev, EV_KEY, KEY_END);
+
 	rc = input_register_device(ipdev);
 	if (rc) {
 		dev_err(&ipdev->dev,

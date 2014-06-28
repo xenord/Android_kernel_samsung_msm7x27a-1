@@ -60,6 +60,7 @@ enum ovp_type_t {
 extern bool power_down;
 extern int charging_boot;
 static int set_timer;
+static int fuel_alert_det;
 
 struct msm_battery_callback {
 	void (*set_cable)(struct msm_battery_callback *ptr,

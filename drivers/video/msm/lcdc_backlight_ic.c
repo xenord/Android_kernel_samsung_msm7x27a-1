@@ -29,7 +29,7 @@
  */
 
 #include <linux/delay.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include "lcdc_backlight_ic.h"
 
 static int lcd_brightness = -1;

@@ -1,7 +1,6 @@
 /*
    BlueZ - Bluetooth protocol stack for Linux
-   Copyright (c) 2000-2001, The Linux Foundation. All rights reserved.
-   Copyright (c) 2010-2013, The Linux Foundation. All rights reserved.
+   Copyright (c) 2000-2001, 2010-2012 The Linux Foundation.  All rights reserved.
 
    Written 2000,2001 by Maxim Krasnyansky <maxk@qualcomm.com>
 
@@ -544,6 +543,7 @@ struct hci_conn *hci_conn_add(struct hci_dev *hdev, int type,
 	conn->disc_timeout = HCI_DISCONN_TIMEOUT;
 	conn->conn_valid = true;
 	spin_lock_init(&conn->lock);
+	wake_lock_init(&conn->idle_lock, WAKE_LOCK_SUSPEND, "bt_idle");
 
 	switch (type) {
 	case ACL_LINK:
@@ -621,6 +621,7 @@ int hci_conn_del(struct hci_conn *conn)
 
 	/* Make sure no timers are running */
 	del_timer(&conn->idle_timer);
+	wake_lock_destroy(&conn->idle_lock);
 	del_timer(&conn->disc_timer);
 	del_timer(&conn->smp_timer);
 	__cancel_delayed_work(&conn->rssi_update_work);
@@ -659,9 +660,6 @@ int hci_conn_del(struct hci_conn *conn)
 	skb_queue_purge(&conn->data_q);
 
 	hci_conn_put_device(conn);
-
-	if (conn->hidp_session_valid)
-		hci_conn_put_device(conn);
 
 	hci_dev_put(hdev);
 
@@ -1084,6 +1082,7 @@ timer:
 		if (conn->conn_valid) {
 			mod_timer(&conn->idle_timer,
 				jiffies + msecs_to_jiffies(hdev->idle_timeout));
+			wake_lock(&conn->idle_lock);
 		}
 		spin_unlock_bh(&conn->lock);
 	}
@@ -1271,10 +1270,8 @@ EXPORT_SYMBOL(hci_conn_hold_device);
 
 void hci_conn_put_device(struct hci_conn *conn)
 {
-	if (atomic_dec_and_test(&conn->devref)) {
-		conn->hidp_session_valid = false;
+	if (atomic_dec_and_test(&conn->devref))
 		hci_conn_del_sysfs(conn);
-	}
 }
 EXPORT_SYMBOL(hci_conn_put_device);
 

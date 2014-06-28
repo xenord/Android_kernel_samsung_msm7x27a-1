@@ -110,7 +110,7 @@ Version 3.0.16 : [201101024]
 #include <linux/version.h>
 #include <linux/io.h>
 #include <linux/delay.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <linux/uaccess.h>
 #include <mach/vreg.h>
 #include <linux/input/mt.h>

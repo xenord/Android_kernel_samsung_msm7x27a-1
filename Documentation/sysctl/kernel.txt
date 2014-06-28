@@ -23,7 +23,9 @@ show up in /proc/sys/kernel:
 - auto_msgmni
 - bootloader_type	     [ X86 only ]
 - bootloader_version	     [ X86 only ]
+- boot_reason		     [ ARM only ]
 - callhome		     [ S390 only ]
+- cap_last_cap
 - core_pattern
 - core_pipe_limit
 - core_uses_pid
@@ -32,7 +34,6 @@ show up in /proc/sys/kernel:
 - domainname
 - hostname
 - hotplug
-- iso_cpu
 - kptr_restrict
 - kstack_depth_to_print       [ X86 only ]
 - l2cr                        [ PPC only ]
@@ -49,6 +50,7 @@ show up in /proc/sys/kernel:
 - panic
 - panic_on_oops
 - panic_on_unrecovered_nmi
+- panic_on_stackoverflow
 - pid_max
 - powersave-nap               [ PPC only ]
 - printk
@@ -58,7 +60,6 @@ show up in /proc/sys/kernel:
 - randomize_va_space
 - real-root-dev               ==> Documentation/initrd.txt
 - reboot-cmd                  [ SPARC only ]
-- rr_interval
 - rtsig-max
 - rtsig-nr
 - sem
@@ -142,6 +143,19 @@ Documentation/x86/boot.txt for additional information.
 
 ==============================================================
 
+boot_reason:
+
+ARM -- reason for device boot
+
+A single bit will be set in the unsigned integer value to identify the
+reason the device was booted / powered on. The value will be zero if this
+feature is not supported on the ARM device being booted.
+
+See the power-on-status field definitions in
+Documentation/arm/msm/boot.txt for Qualcomm's family of devices.
+
+==============================================================
+
 callhome:
 
 Controls the kernel's callhome behavior in case of a kernel panic.
@@ -154,6 +168,13 @@ nothing happens in case of a kernel panic. If this value is set to "1"
 the complete kernel oops message is send to the IBM customer service
 organization in case the mainframe the Linux operating system is running
 on has a service contract with IBM.
+
+==============================================================
+
+cap_last_cap
+
+Highest valid capability of the running kernel.  Exports
+CAP_LAST_CAP from the kernel.
 
 ==============================================================
 
@@ -277,13 +298,24 @@ Default value is "/sbin/hotplug".
 kptr_restrict:
 
 This toggle indicates whether restrictions are placed on
-exposing kernel addresses via /proc and other interfaces.  When
-kptr_restrict is set to (0), there are no restrictions.  When
-kptr_restrict is set to (1), the default, kernel pointers
-printed using the %pK format specifier will be replaced with 0's
-unless the user has CAP_SYSLOG.  When kptr_restrict is set to
-(2), kernel pointers printed using %pK will be replaced with 0's
-regardless of privileges.
+exposing kernel addresses via /proc and other interfaces.
+
+When kptr_restrict is set to (0), the default, there are no restrictions.
+
+When kptr_restrict is set to (1), kernel pointers printed using the %pK
+format specifier will be replaced with 0's unless the user has CAP_SYSLOG
+and effective user and group ids are equal to the real ids. This is
+because %pK checks are done at read() time rather than open() time, so
+if permissions are elevated between the open() and the read() (e.g via
+a setuid binary) then %pK will not leak kernel pointers to unprivileged
+users. Note, this is a temporary solution only. The correct long-term
+solution is to do the permission checks at open() time. Consider removing
+world read permissions from files that use %pK, and using dmesg_restrict
+to protect against uses of %pK in dmesg(8) if leaking kernel pointer
+values to unprivileged users is a concern.
+
+When kptr_restrict is set to (2), kernel pointers printed using
+%pK will be replaced with 0's regardless of privileges.
 
 ==============================================================
 
@@ -291,16 +323,6 @@ kstack_depth_to_print: (X86 only)
 
 Controls the number of words to print when dumping the raw
 kernel stack.
-
-==============================================================
-
-iso_cpu: (BFS CPU scheduler only).
-
-This sets the percentage cpu that the unprivileged SCHED_ISO tasks can
-run effectively at realtime priority, averaged over a rolling five
-seconds over the -whole- system, meaning all cpus.
-
-Set to 70 (percent) by default.
 
 ==============================================================
 
@@ -397,11 +419,32 @@ Controls the kernel's behaviour when an oops or BUG is encountered.
 
 ==============================================================
 
+panic_on_stackoverflow:
+
+Controls the kernel's behavior when detecting the overflows of
+kernel, IRQ and exception stacks except a user stack.
+This file shows up if CONFIG_DEBUG_STACKOVERFLOW is enabled.
+
+0: try to continue operation.
+
+1: panic immediately.
+
+==============================================================
+
+
 pid_max:
 
 PID allocation wrap value.  When the kernel's next PID value
 reaches this value, it wraps back to a minimum PID value.
 PIDs of value pid_max or larger are not allocated.
+
+==============================================================
+
+ns_last_pid:
+
+The last pid allocated in the current (the one task using this sysctl
+lives in) pid namespace. When selecting a pid for a next task on fork
+kernel tries to allocate a number starting from this one.
 
 ==============================================================
 
@@ -499,20 +542,6 @@ rebooting. ???
 
 ==============================================================
 
-rr_interval: (BFS CPU scheduler only)
-
-This is the smallest duration that any cpu process scheduling unit
-will run for. Increasing this value can increase throughput of cpu
-bound tasks substantially but at the expense of increased latencies
-overall. Conversely decreasing it will decrease average and maximum
-latencies but at the expense of throughput. This value is in
-milliseconds and the default value chosen depends on the number of
-cpus available at scheduler initialisation with a minimum of 6.
-
-Valid values are from 1-1000.
-
-==============================================================
-
 rtsig-max & rtsig-nr:
 
 The file rtsig-max can be used to tune the maximum number
@@ -597,6 +626,8 @@ can be ORed together:
         instead of using the one provided by the hardware.
  512 - A kernel warning has occurred.
 1024 - A module from drivers/staging was loaded.
+2048 - The system is working around a severe firmware bug.
+4096 - An out-of-tree module has been loaded.
 
 ==============================================================
 

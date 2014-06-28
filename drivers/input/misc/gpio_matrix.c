@@ -20,17 +20,8 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/wakelock.h>
-#include <linux/input.h>
 #include "../../misc/sec_debug.h"
 #include "../../dpram/dpram.h"
-
-#if 0//defined(CONFIG_MACH_GEIM) || defined(CONFIG_MACH_TREBON) \
-						|| defined(CONFIG_MACH_JENA)
-#define VOLUMEUP_GPIO	39
-#define VOLUMEDOWN_GPIO	36
-unsigned int Volume_Up_irq;
-unsigned int Volume_Down_irq;
-#endif
 
 struct gpio_kp {
 	struct gpio_event_input_devs *input_devs;
@@ -45,15 +36,18 @@ struct gpio_kp {
 	unsigned int disabled_irq:1;
 	unsigned long keys_pressed[0];
 };
+
 static struct gpio_kp *pgpio_key;
 
 extern struct class *sec_class;
 struct device *kpd_dev;
+unsigned int sec_key_pressed;
 static ssize_t keyshort_test(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int count;
+	pr_info("[KEY] %s key %d\n",__func__, sec_key_pressed);
 
-	if(pgpio_key->some_keys_pressed) {
+	if (sec_key_pressed) {
 		count = sprintf(buf, "PRESS\n");
 	}
 	else {
@@ -62,8 +56,7 @@ static ssize_t keyshort_test(struct device *dev, struct device_attribute *attr, 
 	return count;
 }
 
-static DEVICE_ATTR(key_pressed, 0664, keyshort_test, NULL);
-
+static DEVICE_ATTR(sec_key_pressed, 0664, keyshort_test, NULL);
 
 static void clear_phantom_key(struct gpio_kp *kp, int out, int in)
 {
@@ -142,6 +135,7 @@ static void report_key(struct gpio_kp *kp, int key_index, int out, int in)
 	unsigned short keycode = keyentry & MATRIX_KEY_MASK;
 	unsigned short dev = keyentry >> MATRIX_CODE_BITS;
 
+//	pr_info("[KEY TEST] %s, %d, key :%d, %d\n", __func__, __LINE__, keycode, pressed);
 	if (pressed != test_bit(keycode, kp->input_devs->dev[dev]->key)) {
 		if (keycode == KEY_RESERVED) {
 			if (mi->flags & GPIOKPF_PRINT_UNMAPPED_KEYS){
@@ -158,17 +152,17 @@ static void report_key(struct gpio_kp *kp, int key_index, int out, int in)
 					mi->input_gpios[in], pressed);
 				}
 
+			//if (dump_enable_flag != 0)
+			///pr_info("[KEY] keycode: %d, %s\n", keycode, pressed ? "pressed" : "released");
+			printk("[KEY] keycode: %d, %s\n", keycode, pressed ? "pressed" : "released");
 			input_report_key(kp->input_devs->dev[dev], keycode, pressed);
-
-#if defined(CONFIG_MACH_TREBON) || defined(CONFIG_MACH_GEIM) \
-						|| defined(CONFIG_MACH_JENA)
+			sec_key_pressed = pressed;
+			
 			if (dump_enable_flag != 0)
 				sec_check_crash_key(keycode, pressed);
-#endif
 		}
 	}
 }
-
 static void report_sync(struct gpio_kp *kp)
 {
 	int i;
@@ -220,14 +214,12 @@ static enum hrtimer_restart gpio_keypad_timer_func(struct hrtimer *timer)
 			gpio_set_value(gpio, polarity);
 		else
 			gpio_direction_output(gpio, polarity);
-		hrtimer_start(timer, timespec_to_ktime(mi->settle_time),
-			HRTIMER_MODE_REL);
+		hrtimer_start(timer, mi->settle_time, HRTIMER_MODE_REL);
 		return HRTIMER_NORESTART;
 	}
 	if (gpio_keypad_flags & GPIOKPF_DEBOUNCE) {
 		if (kp->key_state_changed) {
-			hrtimer_start(&kp->timer,
-				timespec_to_ktime(mi->debounce_delay),
+			hrtimer_start(&kp->timer, mi->debounce_delay,
 				      HRTIMER_MODE_REL);
 			return HRTIMER_NORESTART;
 		}
@@ -243,8 +235,7 @@ static enum hrtimer_restart gpio_keypad_timer_func(struct hrtimer *timer)
 		report_sync(kp);
 	}
 	if (!kp->use_irq || kp->some_keys_pressed) {
-		hrtimer_start(timer, timespec_to_ktime(mi->poll_time),
-			HRTIMER_MODE_REL);
+		hrtimer_start(timer, mi->poll_time, HRTIMER_MODE_REL);
 		return HRTIMER_NORESTART;
 	}
 
@@ -351,38 +342,37 @@ int gpio_event_matrix_func(struct gpio_event_input_devs *input_devs,
 	int i;
 	int err;
 	int key_count;
-	int wakeup_keys_status;
-	int irq;
-	static int irq_status = 1;
+        int wakeup_keys_status;
+        int irq;
+        static int irq_status = 1;
 	struct gpio_kp *kp;
 	struct gpio_event_matrix_info *mi;
 
 	mi = container_of(info, struct gpio_event_matrix_info, info);
 	if (func == GPIO_EVENT_FUNC_SUSPEND || func == GPIO_EVENT_FUNC_RESUME) {
 		/* TODO: disable scanning */
-		wakeup_keys_status = gpio_event_get_wakeup_keys_status() & 0x01;
-
-		if (irq_status != wakeup_keys_status)
-			irq_status = wakeup_keys_status;
-		else
-			return 0;
-
-
-		for (i = 0; i < mi->ninputs; i++) {
-			irq = gpio_to_irq(mi->input_gpios[i]);
-
-			if (irq_status == 1)
-				err = enable_irq_wake(irq);
-			else
-				err = disable_irq_wake(irq);
-		}
-		/* HOME Key is wakeup source */
-		for (i = 0; i < mi->nwakeups; i++) {
-			irq = gpio_to_irq(mi->wakeup_gpios[i]);
-			err = enable_irq_wake(irq);
-		}
-
 		return 0;
+                wakeup_keys_status = gpio_event_get_wakeup_keys_status() & 0x01;
+
+                if (irq_status != wakeup_keys_status)
+                        irq_status = wakeup_keys_status;
+                else
+                        return 0;
+
+
+                for (i = 0; i < mi->ninputs; i++) {
+                        irq = gpio_to_irq(mi->input_gpios[i]);
+
+                        if (irq_status == 1)
+                                err = enable_irq_wake(irq);
+                        else
+                                err = disable_irq_wake(irq);
+                }
+                /* HOME Key is wakeup source */
+                for (i = 0; i < mi->nwakeups; i++) {
+                        irq = gpio_to_irq(mi->wakeup_gpios[i]);
+                        err = enable_irq_wake(irq);
+                }
 	}
 
 	if (func == GPIO_EVENT_FUNC_INIT) {
@@ -466,13 +456,14 @@ int gpio_event_matrix_func(struct gpio_event_input_devs *input_devs,
 		wake_lock_init(&kp->wake_lock, WAKE_LOCK_SUSPEND, "gpio_kp");
 		err = gpio_keypad_request_irqs(kp);
 		kp->use_irq = err == 0;
-
-		kpd_dev = device_create(sec_class, NULL, 0, NULL, "sec_key");
+		
+				kpd_dev = device_create(sec_class, NULL, 0, NULL, "sec_key");
 		if (!kpd_dev)
 			printk(KERN_WARNING "Failed to create device(sec_key)!\n");
-		if (device_create_file(kpd_dev, &dev_attr_key_pressed) < 0)
+		if (device_create_file(kpd_dev, &dev_attr_sec_key_pressed) < 0)
 			printk(KERN_WARNING "Failed to create file(%s)!\n"
-				, dev_attr_key_pressed.attr.name);
+				, dev_attr_sec_key_pressed.attr.name);
+
 		pr_info("GPIO Matrix Keypad Driver: Start keypad matrix for "
 			"%s%s in %s mode\n", input_devs->dev[0]->name,
 			(input_devs->count > 1) ? "..." : "",

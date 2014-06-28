@@ -23,8 +23,9 @@
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 #include <media/msm_camera.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
 #include <mach/pmic.h>
+#include <linux/module.h>
 
 #include <mach/camera.h>
 #include <mach/vreg.h>

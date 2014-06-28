@@ -32,4 +32,3 @@ void s5k6aafx_ldo_power_on(void);
 
 
 #endif
-

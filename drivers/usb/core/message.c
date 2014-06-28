@@ -435,7 +435,7 @@ int usb_sg_init(struct usb_sg_request *io, struct usb_device *dev,
 
 			len = sg->length;
 			if (length) {
-				len = min_t(unsigned, len, length);
+				len = min_t(size_t, len, length);
 				length -= len;
 				if (length == 0)
 					io->entries = i + 1;
@@ -1770,9 +1770,6 @@ free_interfaces:
 		goto free_interfaces;
 	}
 
-	dev->actconfig = cp;
-	if (cp)
-		usb_notify_config_device(dev);
 	/*
 	 * Initialize the new interface structures and the
 	 * hc/hcd/usbcore interface/endpoint state.

@@ -5,6 +5,7 @@
 #include <linux/input.h>
 #include <linux/input-polldev.h>
 #include <linux/mutex.h>
+#include <linux/module.h>
 
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>

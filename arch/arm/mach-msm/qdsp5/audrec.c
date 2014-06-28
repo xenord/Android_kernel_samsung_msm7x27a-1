@@ -34,6 +34,7 @@
 
 #include <mach/qdsp5/qdsp5audreccmdi.h>
 #include <mach/qdsp5/qdsp5audrecmsg.h>
+#include <mach/qdsp5/qdsp5audpreproc.h>
 
 #include "audmgr.h"
 #include <mach/debug_mm.h>

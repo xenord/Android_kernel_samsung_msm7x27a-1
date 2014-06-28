@@ -23,7 +23,8 @@
 #include <linux/uaccess.h>
 #include <linux/miscdevice.h>
 #include <media/msm_camera.h>
-#include <mach/gpio.h>
+#include <linux/gpio.h>
+#include <linux/module.h>
 
 #include "s5k4ecgx.h"
 #include "s5k4ecgx_regs.h"

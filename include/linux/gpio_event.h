@@ -85,10 +85,10 @@ struct gpio_event_matrix_info {
 	unsigned int *wakeup_gpios;
 	unsigned int nwakeups;
 	/* time to wait before reading inputs after driving each output */
-	struct timespec settle_time;
+	ktime_t settle_time;
 	/* time to wait before scanning the keypad a second time */
-	struct timespec debounce_delay;
-	struct timespec poll_time;
+	ktime_t debounce_delay;
+	ktime_t poll_time;
 	unsigned flags;
 };
 
@@ -169,5 +169,8 @@ uint16_t gpio_axis_4bit_gray_map(
 uint16_t gpio_axis_5bit_singletrack_map(
 			struct gpio_event_axis_info *info, uint16_t in);
 
-int gpio_event_get_wakeup_keys_status(void);
 #endif
+
+extern struct class *sec_class;
+
+int gpio_event_get_wakeup_keys_status(void);

@@ -195,5 +195,3 @@ void cam_ldo_power_off(void)
 
 }
 #endif	/* end CONFIG_SR300PC20 */
-
-

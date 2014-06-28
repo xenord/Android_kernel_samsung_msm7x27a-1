@@ -385,8 +385,10 @@ static unsigned short bfq_weight_to_ioprio(int weight)
 static inline void bfq_get_entity(struct bfq_entity *entity)
 {
 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+	struct bfq_sched_data *sd;
 
 	if (bfqq != NULL) {
+		sd = entity->sched_data;
 		atomic_inc(&bfqq->ref);
 		bfq_log_bfqq(bfqq->bfqd, bfqq, "get_entity: %p %d",
 			     bfqq, atomic_read(&bfqq->ref));
@@ -480,12 +482,14 @@ static void bfq_forget_entity(struct bfq_service_tree *st,
 			      struct bfq_entity *entity)
 {
 	struct bfq_queue *bfqq = bfq_entity_to_bfqq(entity);
+	struct bfq_sched_data *sd;
 
 	BUG_ON(!entity->on_st);
 
 	entity->on_st = 0;
 	st->wsum -= entity->weight;
 	if (bfqq != NULL) {
+		sd = entity->sched_data;
 		bfq_log_bfqq(bfqq->bfqd, bfqq, "forget_entity: %p %d",
 			     bfqq, atomic_read(&bfqq->ref));
 		bfq_put_queue(bfqq);
@@ -976,9 +980,9 @@ static struct bfq_queue *bfq_get_next_queue(struct bfq_data *bfqd)
 
 static void __bfq_bfqd_reset_active(struct bfq_data *bfqd)
 {
-	if (bfqd->active_cic != NULL) {
-		put_io_context(bfqd->active_cic->ioc);
-		bfqd->active_cic = NULL;
+	if (bfqd->active_bic != NULL) {
+		put_io_context(bfqd->active_bic->icq.ioc);
+		bfqd->active_bic = NULL;
 	}
 
 	bfqd->active_queue = NULL;
