@@ -1,6 +1,6 @@
-Android-SpeedKernel-3.0.101
+Android_SpeedKernel
 ==============
-Android kernel 3.0.101 for samsung galaxy Ace Plus (GT-S7500)
+Android Speedkernel  samsung galaxy Ace Plus (GT-S7500)
 
 http://www.androidiani.com/forum/samsung-galaxy-ace-plus-modding/299846-rom-speed-mod.html
 
