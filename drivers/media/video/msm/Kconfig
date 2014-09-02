@@ -183,7 +183,7 @@ config SR300PC20
 
 config S5K4ECGX
 	bool "Sensor S5K4ECGX (LSI 5M)"
-	default n
+	default y
 	---help---
 	  Support for IMX072 sony sensor driver.
 	  It is a Bayer 5MP sensor with auto focus and it supports
