@@ -160,7 +160,7 @@ config DW9712_ACT
 config MSM_CAMERA_FLASH_SC628A
 	bool "Qualcomm MSM camera sc628a flash support"
 	depends on MSM_CAMERA
-	default n
+	default y
 	---help---
 	  Enable support for LED flash for msm camera.
 	  It is a samtech charge pump flash driver and it
