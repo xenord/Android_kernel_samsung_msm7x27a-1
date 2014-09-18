@@ -2379,7 +2379,7 @@ config MSM_RTB_SEPARATE_CPUS
 	  for each cpu to log accesses. Selecting this option will log each cpu
 	  separately. This will guarantee that the last acesses for each cpu
 	  will be logged but there will be fewer entries per cpu
-	  
+
 config MSM_EBI_ERP
 	bool "External Bus Interface (EBI) error reporting"
 	help
