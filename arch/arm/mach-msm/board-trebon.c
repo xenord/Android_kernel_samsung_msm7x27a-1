@@ -3925,11 +3925,13 @@ static void __init reserve_ion_memory(void)
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += 1;
 #endif
 }
 
 static void __init msm7x27a_calculate_reserve_sizes(void)
 {
+	fix_sizes();
 	size_pmem_devices();
 	reserve_pmem_memory();
 	size_ion_devices();
