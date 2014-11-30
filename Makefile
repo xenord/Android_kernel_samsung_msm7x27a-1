@@ -351,13 +351,11 @@ CHECK		= sparse
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-ifdef CONFIG_LINARO		  
-MODFLAGS	= -mcpu=cortex-a5 -mtune=cortex-a5 -march=armv7-a -mfpu=neon-vfpv4 -funsafe-math-optimizations -fomit-frame-pointer -ffast-math -funsafe-loop-optimizations
-else
-MODFLAGS	=
-endif
-CFLAGS_MODULE   = -DMODULE $(MODFLAGS)
-AFLAGS_MODULE   = -DMODULE $(MODFLAGS)
+
+MODFLAGS	=  -g0 -march=armv7-a -mfpu=neon-fp16 -mtune=cortex-a5 -O2
+
+CFLAGS_MODULE   = $(MODFLAGS)
+AFLAGS_MODULE   = $(MODFLAGS)
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
 CFLAGS_KERNEL	= $(MODFLAGS)
 AFLAGS_KERNEL	= $(MODFLAGS)
