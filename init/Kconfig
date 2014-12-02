@@ -1285,8 +1285,6 @@ config COMPAT_BRK
 config SLUB
 	def_bool y
 
-endchoice
-
 config MMAP_ALLOW_UNINITIALIZED
 	bool "Allow mmapped anonymous memory to be uninitialized"
 	depends on EXPERT && !MMU
@@ -1324,7 +1322,7 @@ config TRACEPOINTS
 
 source "arch/Kconfig"
 
-endmenu		# General setup
+endmenu
 
 config HAVE_GENERIC_DMA_COHERENT
 	bool
