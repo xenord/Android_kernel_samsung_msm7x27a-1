@@ -694,6 +694,10 @@ asmlinkage void __init start_kernel(void)
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
 		efi_enter_virtual_mode();
 #endif
+#ifdef CONFIG_X86_ESPFIX64
+	/* Should be run before the first non-init thread is created */
+	init_espfix_bsp();
+#endif
 	thread_info_cache_init();
 	cred_init();
 	fork_init(totalram_pages);
@@ -897,6 +901,7 @@ static noinline int init_post(void)
 	system_state = SYSTEM_RUNNING;
 	numa_default_policy();
 
+	print_scheduler_version();
 
 	current->signal->flags |= SIGNAL_UNKILLABLE;
 
