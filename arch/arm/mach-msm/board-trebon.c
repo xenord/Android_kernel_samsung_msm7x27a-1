@@ -1492,6 +1492,10 @@ void trebon_chg_connected(enum chg_type chgtype)
 		ret = msm_proc_comm(PCOM_CHG_USB_IS_PC_CONNECTED, 
 			data1, data2);
 		break;
+	case CARKIT:
+		ret = msm_proc_comm(PCOM_CHG_USB_IS_PC_CONNECTED, 
+			data1, data2);
+		break;
 	case USB_CHG_TYPE__WALLCHARGER:
 		ret = msm_proc_comm(PCOM_CHG_USB_IS_CHARGER_CONNECTED,
 				data1, data2);

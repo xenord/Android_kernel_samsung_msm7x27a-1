@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 0
 SUBLEVEL = 101
-EXTRAVERSION = -sm
+EXTRAVERSION =
 NAME = Sodden Ben Lomond
 
 # *DOCUMENTATION*
@@ -352,7 +352,7 @@ CHECK		= sparse
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
 
-MODFLAGS	=  -g0 -march=armv7-a -mfpu=neon-fp16 -mtune=cortex-a5 -O2
+MODFLAGS	=  -g0 -march=armv7-a -mfpu=neon-vfpv4 -mtune=cortex-a5 -O2
 
 CFLAGS_MODULE   = $(MODFLAGS)
 AFLAGS_MODULE   = $(MODFLAGS)
