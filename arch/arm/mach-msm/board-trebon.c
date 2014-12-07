@@ -63,9 +63,6 @@
 #ifdef CONFIG_PROXIMITY_SENSOR
 #include <linux/gp2a.h>
 #endif
-#ifdef CONFIG_FORCE_FAST_CHARGE
-#include <linux/fastchg.h>
-#endif
 
 #ifndef CONFIG_MSM_CAMERA
 #define CONFIG_MSM_CAMERA
@@ -1476,8 +1473,7 @@ static void jena_usb_power(int onoff, char *path) { }
 
 void trebon_chg_connected(enum chg_type chgtype)
 {
-	char *chg_types[] = {
-		        "STD DOWNSTREAM PORT",
+	char *chg_types[] = {"STD DOWNSTREAM PORT",
 			"CARKIT",
 			"DEDICATED CHARGER",
 			"INVALID"};
@@ -1496,7 +1492,7 @@ void trebon_chg_connected(enum chg_type chgtype)
 		ret = msm_proc_comm(PCOM_CHG_USB_IS_PC_CONNECTED, 
 			data1, data2);
 		break;
-	case USB_CHG_TYPE__CARKIT:
+	case USB_CHG_TYPE__WALLCHARGER:
 		ret = msm_proc_comm(PCOM_CHG_USB_IS_CHARGER_CONNECTED,
 				data1, data2);
 		break;
