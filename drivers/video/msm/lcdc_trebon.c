@@ -39,7 +39,7 @@
 #endif
 
 #define USE_STANDBY_MODE
-static int enabled = 0;
+/*static int enabled = 0; */
 
 static int spi_cs;
 static int spi_sclk;
@@ -81,7 +81,7 @@ static DEFINE_MUTEX(spi_mutex);
 
 #define SMD_PANEL	1
 #define AUO_PANEL	2
-static int lcd_id = -1;
+/*static int lcd_id = -1; */
 
 struct spi_cmd_desc {
 	int dlen;
@@ -95,8 +95,8 @@ struct spi_cmd_desc {
 static char sleep_out_seq[1] = { 0x11 };
 static char disp_on_seq[1] = { 0x29 };
 static char disp_off_seq[1] = { 0x28 };
-static char sleep_in_seq[1] = { 0x10 };
-static char sw_reset_seq[1] = { 0x01 };
+/*static char sleep_in_seq[1] = { 0x10 }; */
+/*DEFINED BUT NOT USED static char sw_reset_seq[1] = { 0x01 }; */
 
 /*
 * Operating Sequence for SMD Panel
@@ -228,10 +228,10 @@ static struct spi_cmd_desc display_on_cmds[] = {
 	{sizeof(disp_on_seq), disp_on_seq, 10},
 };
 
-static struct spi_cmd_desc display_off_cmds[] = {
+/*static struct spi_cmd_desc display_off_cmds[] = {
 	{sizeof(disp_off_seq), disp_off_seq, 0},
 	{sizeof(sleep_in_seq), sleep_in_seq, 120},
-};
+}; */
 
 static struct spi_cmd_desc display_standby_in_cmds[] = {
 	{sizeof(disp_off_seq), disp_off_seq, 0},
@@ -241,7 +241,7 @@ static struct spi_cmd_desc display_standby_in_cmds[] = {
 static struct spi_cmd_desc sw_rdy_cmds[] = {
 	{sizeof(sleep_out_seq), sleep_out_seq, 0},
 };
-
+/* defined but not used
 static void read_ldi_register(u8 addr, u8 *buf, int count)
 {
 	long i, j;
@@ -251,7 +251,7 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 	gpio_set_value(spi_sclk, 1);
 	udelay(DEFAULT_USLEEP);
 
-	/* Write Command */
+	// Write Command 
 	gpio_set_value(spi_cs, 0);
 	udelay(DEFAULT_USLEEP);
 	gpio_set_value(spi_sclk, 0);
@@ -277,20 +277,20 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 	gpio_set_value(spi_sdi, 0);
 
 	if (count > 1) {
-		/* dummy clock cycle */
+		// dummy clock cycle 
 		gpio_set_value(spi_sclk, 0);
 		udelay(DEFAULT_USLEEP);
 		gpio_set_value(spi_sclk, 1);
 		udelay(DEFAULT_USLEEP);
 	}
 
-	/* Read Parameter */
+	// Read Parameter
 	if (count > 0) {
 		for (j = 0; j < count; j++) {
 			for (i = 7; i >= 0; i--) {
 				gpio_set_value(spi_sclk, 0);
 				udelay(DEFAULT_USLEEP);
-				/* read bit */
+				// read bit 
 				if (gpio_get_value(spi_sdo))
 					buf[j] |= (0x1<<i);
 				else
@@ -305,7 +305,7 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 	udelay(DEFAULT_USLEEP);
 	gpio_set_value(spi_cs, 1);
 }
-
+*/
 static void spi_cmds_tx(struct spi_cmd_desc *desc, int cnt)
 {
 	long i, j, p;
@@ -379,7 +379,7 @@ tx_done:
 	}
 	mutex_unlock(&spi_mutex);
 }
-
+/* defined but not used
 static void read_lcd_id(void)
 {
 	unsigned char data[4] = {0, };
@@ -400,17 +400,19 @@ static void read_lcd_id(void)
 
 	DPRINT("ldi mtpdata: %x %x %x\n", data[0], data[1], data[2]);
 }
-
+*/
+/* defined but not used
 static void spi_init(void)
 {
-	/* Set the output so that we dont disturb the slave device */
+	// Set the output so that we dont disturb the slave device
 	gpio_set_value(spi_sclk, 0);
 	gpio_set_value(spi_sdi, 0);
 
-	/* Set the Chip Select De-asserted */
+	// Set the Chip Select De-asserted 
 	gpio_set_value(spi_cs, 0);
 
 }
+*/
 
 static void spi_standby(void)
 {
@@ -425,7 +427,7 @@ static void spi_standby(void)
 
 #define REGULATOR_ENABLE	1
 #define REGULATOR_DISABLE	0
-
+/* defined but not used
 static void trebon_regulator_config(int regulator_en)
 {
 	int rc;
@@ -476,7 +478,7 @@ static void trebon_regulator_config(int regulator_en)
 			}
 		} else { printk("[LCDC_TREBON] Already disabled, how did this happen?\n"); }
 	}
-}
+} */
 
 static void trebon_disp_reset(int normal)
 {
@@ -509,7 +511,7 @@ static void trebon_disp_reset(int normal)
 #endif
 }
 
-static void trebon_disp_powerup(void)
+/*static void trebon_disp_powerup(void)
 {
 	DPRINT("start %s\n", __func__);
 
@@ -536,7 +538,7 @@ static void trebon_disp_powerdown(void)
 	msleep(1);
 
 	disp_state.disp_powered_up = FALSE;
-}
+} */
 
 static void trebon_disp_on(void)
 {
@@ -672,11 +674,11 @@ static int trebon_disp_set_power(struct lcd_device *dev, int power)
 	return 0;
 }
 
-static int trebon_disp_get_power(struct lcd_device *dev, int power)
+/*static int trebon_disp_get_power(struct lcd_device *dev, int power)
 {
 	DPRINT("trebon_disp_get_power\n");
 	return disp_state.disp_initialized;
-}
+}*/
 
 static ssize_t trebon_lcdtype_show(struct device *dev,
 			struct device_attribute *attr, char *buf)
@@ -692,7 +694,7 @@ static ssize_t trebon_lcdtype_show(struct device *dev,
 }
 
 static struct lcd_ops trebon_lcd_props = {
-	.get_power = trebon_disp_get_power,
+	//.get_power = trebon_disp_get_power,
 	.set_power = trebon_disp_set_power,
 };
 
