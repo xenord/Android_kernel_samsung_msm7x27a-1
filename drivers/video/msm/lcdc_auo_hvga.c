@@ -81,7 +81,7 @@ static DEFINE_MUTEX(spi_mutex);
 
 #define SMD_PANEL	1
 #define AUO_PANEL	2
-static int lcd_id = -1;
+//static int lcd_id = -1;
 
 struct spi_cmd_desc {
 	int dlen;
@@ -96,76 +96,76 @@ static char sleep_out_seq[1] = { 0x11 };
 static char disp_on_seq[1] = { 0x29 };
 static char disp_off_seq[1] = { 0x28 };
 static char sleep_in_seq[1] = { 0x10 };
-static char sw_reset_seq[1] = { 0x01 };
+//static char sw_reset_seq[1] = { 0x01 };
 
 /*
 * Operating Sequence for AUO Panel
 */
-static char level_2_command[3] = {
+/*static char level_2_command[3] = {
 	0xF0,
 	0x5A, 0x5A
-};
+};*/
 
-static char mtp_dstb[3] = {
+/*static char mtp_dstb[3] = {
 	0xF1,
 	0x5A, 0x5A
-};
+};*/
 
-static char level_3_command[3] = {
+/*static char level_3_command[3] = {
 	0xFC,
 	0xA5, 0xA5
-};
+}; */
 
-static char manpwrseq[8] = {
+/*static char manpwrseq[8] = {
 	0xF3,
 	0x07, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x04
-};
+};*/
 
-static char pwrctrl[16] = {
+/*static char pwrctrl[16] = {
 	0xF4,
 	0x02, 0x8E, 0x5D, 0x5D, 0x5D,
 	0x5D, 0x50, 0x32, 0x13, 0x54,
 	0x51, 0x11, 0x2A, 0x2A, 0xB2
-};
+}; */
 
-static char disctrl[14] = {
+/*static char disctrl[14] = {
 	0xF2,
-	0x3C, 0x7E, 0x03, 0x0B, 0x08,/* 0x18, 0x18,*/
+	0x3C, 0x7E, 0x03, 0x0B, 0x08,//0x18, 0x18,
 	0x02, 0x10, 0x00, 0x2F, 0x10,
 	0xC8, 0x5D, 0x5D
-};
+}; */
 
-static char srcctl[9] = {
+/*static char srcctl[9] = {
 	0xF6,
-	0x29, 0x02, 0x0F, 0x00, 0x04,/*0x14,*/
-	0x44,/*0x77,*/ 0x44, 0x15
-};
+	0x29, 0x02, 0x0F, 0x00, 0x04,//0x14,
+	0x44, 0x44, 0x15
+}; */
 
-static char panelctl[9] = {
+/*static char panelctl[9] = {
 	0xF8,
 	0x55, 0x00, 0x16, 0x11, 0x40,
 	0x00, 0x05, 0x0A
-};
+}; */
 
-static char ifctl[5] = {
+/*static char ifctl[5] = {
 	0xF7,
-	0x18,/*0x18,*/ 0x81, 0x10, 0x02
-};
+	0x18, 0x81, 0x10, 0x02
+};*/
 
-static char red_gamma_selection[2] = {
+/*static char red_gamma_selection[2] = {
 	0xF9,
 	0x24
-};
+}; */
 
-static char positive_gamma_control1[15] = {
+/*static char positive_gamma_control1[15] = {
 	0xFA,
 	0x1A, 0x25, 0x03, 0x03, 0x0E,
 	0x00, 0x00, 0x04, 0x2F, 0x25,
 	0x16, 0x18, 0x19, 0x01
-};
+};*/
 
-static char negative_gamma_control1[15] = {
+/*static char negative_gamma_control1[15] = {
 	0xFB,
 	0x1A, 0x25, 0x03, 0x03, 0x0E,
 	0x00, 0x00, 0x04, 0x2F, 0x25,
@@ -238,9 +238,9 @@ static char write_control_display[2] = {
 static char write_display_brightness[2] = {
 	0x51,
 	0xFF
-};
+}; */
 
-static struct spi_cmd_desc display_init_cmds[] = {
+/*static struct spi_cmd_desc display_init_cmds[] = {
 	{sizeof(level_2_command), level_2_command, 0},
 	{sizeof(mtp_dstb), mtp_dstb, 0},
 	{sizeof(level_3_command), level_3_command, 0},
@@ -272,14 +272,14 @@ static struct spi_cmd_desc display_init_cmds[] = {
 	{sizeof(write_control_display), write_control_display, 0},
 	{sizeof(write_display_brightness), write_display_brightness, 0},
 	{sizeof(disp_on_seq), disp_on_seq, 0},
-};
+}; */
 
-static struct spi_cmd_desc display_off_cmds[] = {
+/*static struct spi_cmd_desc display_off_cmds[] = {
 	{sizeof(disp_off_seq), disp_off_seq, 0},
-};
-static struct spi_cmd_desc display_on_cmds[] = {
+}; */
+/*static struct spi_cmd_desc display_on_cmds[] = {
 	{sizeof(disp_off_seq), disp_on_seq, 100},
-};
+}; */
 
 static struct spi_cmd_desc display_sleep_in_cmds[] = {
 	{sizeof(disp_off_seq), disp_off_seq, 25},
@@ -291,13 +291,13 @@ static struct spi_cmd_desc display_sleep_out_cmds[] = {
 	{sizeof(disp_on_seq), disp_on_seq, 100},
 };
 
-static struct spi_cmd_desc sw_rdy_cmds[] = {
-	{sizeof(sw_reset_seq), sw_reset_seq, 10},
+/*static struct spi_cmd_desc sw_rdy_cmds[] = {
+	{sizeof(sw_reset_seq), sw_reset_seq, 10}, */
 /*	{sizeof(ifmode_set2), ifmode_set2, 0},*/
-/*	{sizeof(ifmode_set), ifmode_set, 0},*/
-};
+/*	{sizeof(ifmode_set), ifmode_set, 0},
+}; */
 
-static void read_ldi_register(u8 addr, u8 *buf, int count)
+/*static void read_ldi_register(u8 addr, u8 *buf, int count)
 {
 	long i, j;
 
@@ -306,7 +306,7 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 	gpio_set_value(spi_sclk, 1);
 	udelay(DEFAULT_USLEEP);
 
-	/* Write Command */
+	// Write Command 
 	gpio_set_value(spi_cs, 0);
 	udelay(DEFAULT_USLEEP);
 	gpio_set_value(spi_sclk, 0);
@@ -332,20 +332,20 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 	gpio_set_value(spi_sdi, 0);
 
 	if (count > 1) {
-		/* dummy clock cycle */
+		// dummy clock cycle 
 		gpio_set_value(spi_sclk, 0);
 		udelay(DEFAULT_USLEEP);
 		gpio_set_value(spi_sclk, 1);
 		udelay(DEFAULT_USLEEP);
 	}
 
-	/* Read Parameter */
+	// Read Parameter 
 	if (count > 0) {
 		for (j = 0; j < count; j++) {
 			for (i = 7; i >= 0; i--) {
 				gpio_set_value(spi_sclk, 0);
 				udelay(DEFAULT_USLEEP);
-				/* read bit */
+				// read bit 
 				if (gpio_get_value(spi_sdo))
 					buf[j] |= (0x1<<i);
 				else
@@ -359,7 +359,7 @@ static void read_ldi_register(u8 addr, u8 *buf, int count)
 
 	udelay(DEFAULT_USLEEP);
 	gpio_set_value(spi_cs, 1);
-}
+} */
 
 static void spi_cmds_tx(struct spi_cmd_desc *desc, int cnt)
 {
@@ -435,7 +435,7 @@ tx_done:
 	mutex_unlock(&spi_mutex);
 }
 
-static void read_lcd_id(void)
+/*static void read_lcd_id(void)
 {
 	unsigned char data[4] = {0, };
 
@@ -454,18 +454,19 @@ static void read_lcd_id(void)
 	}
 
 	DPRINT("ldi mtpdata: %x %x %x\n", data[0], data[1], data[2]);
-}
+} */
 
+/*
 static void spi_init(void)
 {
-	/* Set the output so that we dont disturb the slave device */
+	// Set the output so that we dont disturb the slave device 
 	gpio_set_value(spi_sclk, 0);
 	gpio_set_value(spi_sdi, 0);
 
-	/* Set the Chip Select De-asserted */
+	// Set the Chip Select De-asserted 
 	gpio_set_value(spi_cs, 0);
 
-}
+} */
 
 static void spi_standby(void)
 {
@@ -481,7 +482,7 @@ static void spi_standby(void)
 #define VREG_ENABLE	1
 #define VREG_DISABLE	0
 
-static void trebon_vreg_config(int vreg_en)
+/*static void trebon_vreg_config(int vreg_en)
 {
 	int rc;
 	struct vreg *vreg_lcd = NULL;
@@ -515,9 +516,9 @@ static void trebon_vreg_config(int vreg_en)
 				 __func__, rc);
 		}
 	}
-}
+} */
 
-static void trebon_disp_reset(int normal)
+/*static void trebon_disp_reset(int normal)
 {
 	gpio_tlmm_config(GPIO_CFG(lcd_reset, 0, GPIO_CFG_OUTPUT
 				, GPIO_CFG_NO_PULL
@@ -533,7 +534,7 @@ static void trebon_disp_reset(int normal)
 	gpio_set_value(lcd_reset, 0);
 	msleep(170);
 	gpio_set_value(lcd_reset, 1);
-/*	msleep(10);*/
+//	msleep(10);
 	usleep(10000);
 #else
 	gpio_set_value(lcd_reset, 0);
@@ -543,27 +544,27 @@ static void trebon_disp_reset(int normal)
 	gpio_set_value(lcd_reset, 0);
 	usleep(50);
 	gpio_set_value(lcd_reset, 1);
-/*	msleep(10);*/
+//	msleep(10);
 	usleep(10000);
 #endif
-}
+} */
 
-static void trebon_disp_powerup(void)
+/*static void trebon_disp_powerup(void)
 {
 	DPRINT("start %s\n", __func__);
 
 	if (!disp_state.disp_powered_up && !disp_state.display_on) {
 
 		trebon_vreg_config(VREG_ENABLE);
-/*		msleep(10);*/
+		msleep(10);
 		usleep(10000);
 		trebon_disp_reset(0);
 
 		disp_state.disp_powered_up = TRUE;
 	}
-}
+} */
 
-static void trebon_disp_powerdown(void)
+/*static void trebon_disp_powerdown(void)
 {
 	DPRINT("start %s\n", __func__);
 
@@ -576,7 +577,7 @@ static void trebon_disp_powerdown(void)
 	usleep(1000);
 
 	disp_state.disp_powered_up = FALSE;
-}
+}*/
 
 static void trebon_disp_on_auo(void)
 {
