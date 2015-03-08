@@ -1469,7 +1469,7 @@ int fsa880_get_charger_status(void)
 	return fsa_cable_type;
 }
 
-static void jena_usb_power(int onoff, char *path) { }
+static void trebon_usb_power(int onoff, char *path) { }
 
 void trebon_chg_connected(enum chg_type chgtype)
 {
@@ -1514,7 +1514,7 @@ void trebon_chg_connected(enum chg_type chgtype)
 	pr_info("\nCharger Type: %s\n", chg_types[chgtype]);
 }
 
-static void jena_usb_cb(u8 attached, struct fsausb_ops *ops)
+static void trebon_usb_cb(u8 attached, struct fsausb_ops *ops)
 {
 	pr_info("[BATT] [%s] Board file [FSA880]: USB Callback\n", __func__);
 
@@ -1570,20 +1570,20 @@ static int checkChargerType()
 	return set_cable_status;
 }
 
-static void jena_fsa880_reset_cb(void)
+static void trebon_fsa880_reset_cb(void)
 {
 	pr_info(" [BATT] Board file [FSA880]: Reset Callback\n");
 }
 
 /* For uUSB Switch */
-static struct fsausb_platform_data jena_fsa880_pdata = {
+static struct fsausb_platform_data trebon_fsa880_pdata = {
        .intb_gpio      = MSM_GPIO_TO_INT(GPIO_MUSB_INT),
-       .usb_cb         = jena_usb_cb,
+       .usb_cb         = trebon_usb_cb,
        .uart_cb        = NULL,
-       .charger_cb     = jena_charger_cb,
-       .jig_cb         = jena_jig_cb,
-	.ovp_cb		= jena_ovp_cb,
-       .reset_cb       = jena_fsa880_reset_cb,
+       .charger_cb     = trebon_charger_cb,
+       .jig_cb         = trebon_jig_cb,
+	.ovp_cb		= trebon_ovp_cb,
+       .reset_cb       = trebon_fsa880_reset_cb,
 };
 
 /* I2C 3 */
@@ -1603,7 +1603,7 @@ static struct platform_device fsa880_i2c_gpio_device = {
 static struct i2c_board_info fsa880_i2c_devices[] = {
 	{
 		I2C_BOARD_INFO("FSA9280", 0x4A >> 1),
-		.platform_data =  &jena_fsa880_pdata,
+		.platform_data =  &trebon_fsa880_pdata,
 		.irq = MSM_GPIO_TO_INT(GPIO_MUSB_INT),
 	},
 };
@@ -3140,7 +3140,7 @@ static uint32_t camera_off_gpio_table[] = {
 
 static uint32_t camera_on_gpio_table[] = {
 
-#ifdef CONFIG_MACH_JENA
+#ifdef CONFIG_MACH_TREBON
 #if (CONFIG_MACH_TREBON_HWREV == 0x0)
 	GPIO_CFG(15, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
 	GPIO_CFG(96, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
