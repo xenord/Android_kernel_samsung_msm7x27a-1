@@ -1529,7 +1529,7 @@ static void trebon_usb_cb(u8 attached, struct fsausb_ops *ops)
 		set_cable_status);
 }
 
-static void jena_charger_cb(u8 attached, struct fsausb_ops *ops)
+static void trebon_charger_cb(u8 attached, struct fsausb_ops *ops)
 {
 	pr_info("[BATT] Board file [FSA880]: Charger Callback\n");
 
@@ -1544,7 +1544,7 @@ static void jena_charger_cb(u8 attached, struct fsausb_ops *ops)
 		set_cable_status);
 }
 
-static void jena_jig_cb(u8 attached, struct fsausb_ops *ops)
+static void trebon_jig_cb(u8 attached, struct fsausb_ops *ops)
 {
 	pr_info("[BATT] Board file [FSA880]: Jig Callback\n");
 
@@ -1554,7 +1554,7 @@ static void jena_jig_cb(u8 attached, struct fsausb_ops *ops)
 		set_acc_status);
 }
 
-static void jena_ovp_cb(u8 attached, struct fsausb_ops *ops)
+static void trebon_ovp_cb(u8 attached, struct fsausb_ops *ops)
 {
 	pr_info("[BATT] Board file [FSA880]: OVP Callback\n");
 
