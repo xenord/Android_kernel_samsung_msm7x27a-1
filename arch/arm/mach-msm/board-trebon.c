@@ -72,7 +72,7 @@
 #include <linux/fastchg.h>
 #endif
 
-#define _CONFIG_MACH_JENA // Temporary flag
+//#define _CONFIG_MACH_JENA // Temporary flag
 #define _CONFIG_MACH_TREBON // Temporary flag
 #define ADSP_RPC_PROG           0x3000000a
 
