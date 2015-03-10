@@ -1765,7 +1765,7 @@ static void msm_pm_restart(char str, const char *cmd)
 		printk(KERN_EMERG "smem_flag is NULL\n");
 	}
 
-#if !defined(CONFIG_MACH_JENA)
+#if !defined(CONFIG_MACH_TREBON)
 	msm_rpcrouter_close();
 #endif
 
@@ -1775,7 +1775,7 @@ static void msm_pm_restart(char str, const char *cmd)
 	sec_set_param(param_power_off_reason, &power_off_reason);
 #endif
 
-#if defined(CONFIG_MACH_JENA)
+#if defined(CONFIG_MACH_TREBON)
 	msm_rpcrouter_close();
 #endif
 
